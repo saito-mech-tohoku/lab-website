@@ -1,7 +1,7 @@
 const fs = require("fs");
 const https = require("https");
 const xml2js = require("xml2js");
-const RSS_URL = "https://note.com/manabedesign2026/rss/";
+const RSS_URL = "https://note.com/saitolabo/rss/";
 
 function fetchText(url) {
   return new Promise((resolve, reject) => {
