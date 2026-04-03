@@ -1,3 +1,3 @@
-# MANABE Design Office final
+# 研究室ホームページ
 News欄は、提供されたX埋め込みコードに合わせて調整済みです。
 logo.png を同じ階層に置いてください。
