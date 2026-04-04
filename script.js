@@ -49,6 +49,14 @@ async function loadNoteTitles(limit, targetSelector, showAllLink = false) {
     if (!response.ok) throw new Error('feed load failed');
 
     const items = await response.json();
+
+items.sort((a, b) => {
+  const getDate = (t) => {
+    const m = t.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    return m ? new Date(m[1], m[2] - 1, m[3]).getTime() : 0;
+  };
+  return getDate(b.title) - getDate(a.title);
+});
     if (!Array.isArray(items)) throw new Error('feed format invalid');
 
     const sortedItems = items
