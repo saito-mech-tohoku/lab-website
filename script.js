@@ -86,4 +86,5 @@ async function loadNoteTitles(limit, targetSelector, showAllLink = false) {
   }
 }
 
+loadNoteTitles(2, '#latest-note-titles', true);
 loadNoteTitles(5, '#all-note-titles', true);
