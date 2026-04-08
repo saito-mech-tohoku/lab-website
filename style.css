@@ -136,7 +136,18 @@ img,video{max-width:100%;display:block}
 }
 
 .paper-list ul {
-  margin: 4px 0 0 16px;
+  margin: 6px 0 0 1.2rem;
+  padding: 0;
+}
+
+.paper-list li {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 4px 0 !important;
+  list-style: disc;
 }
 
 .paper-list a {
@@ -145,10 +156,4 @@ img,video{max-width:100%;display:block}
 
 .paper-list a:hover {
   text-decoration: underline;
-}
-.paper-list li {
-  background: none;
-  border-radius: 0;
-  padding: 0;
-  margin: 2px 0;
 }
