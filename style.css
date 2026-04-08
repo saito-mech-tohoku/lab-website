@@ -119,3 +119,8 @@ img,video{max-width:100%;display:block}
   border-radius: 0;
   list-style: disc;
 }
+
+.research-title {
+  font-weight: 700;
+  color: inherit;
+}
