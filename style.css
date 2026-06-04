@@ -161,26 +161,27 @@ img,video{max-width:100%;display:block}
 .language-note {
   max-width: 1000px;
   margin: 3rem auto 0;
-  padding: 1rem 1.5rem;
+  padding: 1.2rem 1.6rem;
 
-  background: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.85);
+  border: 1px solid var(--line);
   border-radius: 12px;
 
   text-align: left;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .language-note h3 {
-  margin: 0 0 0.6rem;
+  margin: 0 0 0.7rem;
   color: #003f8c;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .language-note p {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
   color: #475569;
 }
 
