@@ -1,15 +1,17 @@
-// ===============================
-// Hero video switching
-// ===============================
-const videos = Array.from(document.querySelectorAll('[data-hero-video]'));
+// ======================================================
+// Hero video
+// ======================================================
+
+const videos = Array.from(document.querySelectorAll("[data-hero-video]"));
 
 if (videos.length > 0) {
   let index = 0;
 
-  const showVideo = (next) => {
+  function showVideo(next) {
     videos.forEach((video, i) => {
       const active = i === next;
-      video.classList.toggle('is-active', active);
+
+      video.classList.toggle("is-active", active);
 
       if (active) {
         video.currentTime = 0;
@@ -18,7 +20,7 @@ if (videos.length > 0) {
         video.pause();
       }
     });
-  };
+  }
 
   showVideo(index);
 
@@ -29,96 +31,127 @@ if (videos.length > 0) {
 }
 
 
-// ===============================
-// note RSS loading
-// ===============================
-const noteUser = 'saitolabo';
-const noteRssUrl = `https://note.com/${noteUser}/rss`;
-const noteApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(noteRssUrl)}`;
 
-function formatDate(dateString) {
-  if (!dateString) return '';
+// ======================================================
+// note RSS
+// ======================================================
 
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return '';
+// あなたのnote ID
+const NOTE_USER = "saitolabo";
 
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+// RSS→JSON変換API
+const NOTE_API =
+  "https://api.rss2json.com/v1/api.json?rss_url=" +
+  encodeURIComponent(`https://note.com/${NOTE_USER}/rss`);
 
-  return `${year}年${month}月${day}日`;
-}
 
+// note取得
 async function fetchNoteItems() {
-  const response = await fetch(noteApiUrl);
+
+  const response = await fetch(NOTE_API);
 
   if (!response.ok) {
-    throw new Error('note RSS loading failed');
+    throw new Error("RSS取得失敗");
   }
 
   const data = await response.json();
 
   if (!data.items || !Array.isArray(data.items)) {
-    throw new Error('invalid note RSS data');
+    throw new Error("RSS形式が不正です");
   }
 
   return data.items;
 }
 
-async function loadNoteTitles(limit, targetSelector, showAllLink = false) {
-  const target = document.querySelector(targetSelector);
+
+
+// ======================================================
+// note表示
+// ======================================================
+
+async function loadNoteTitles(limit, selector, showAllLink = false) {
+
+  const target = document.querySelector(selector);
+
   if (!target) return;
 
+  target.innerHTML = "<li>読み込み中...</li>";
+
   try {
-    target.innerHTML = '<li>読み込み中...</li>';
 
     const items = await fetchNoteItems();
 
-    const list = items
-      .slice()
-      .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-      .slice(0, limit);
+    // 新しい順
+    items.sort((a, b) => {
 
-    target.innerHTML = '';
+      return new Date(b.pubDate) - new Date(a.pubDate);
+
+    });
+
+    const list = items.slice(0, limit);
+
+    target.innerHTML = "";
 
     if (list.length === 0) {
-      target.innerHTML = '<li>note記事は準備中です。</li>';
+
+      target.innerHTML = "<li>記事はありません。</li>";
       return;
+
     }
 
-    list.forEach((item) => {
-      const li = document.createElement('li');
-      const a = document.createElement('a');
+    list.forEach(item => {
 
-      a.href = item.link || '#';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+      const li = document.createElement("li");
 
-      const dateText = formatDate(item.pubDate);
-      a.textContent = dateText
-        ? `${dateText}　${item.title || 'タイトル未設定'}`
-        : item.title || 'タイトル未設定';
+      const a = document.createElement("a");
+
+      a.href = item.link;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+
+      // タイトルだけ表示（タイトル内の日付を利用）
+      a.textContent = item.title;
 
       li.appendChild(a);
+
       target.appendChild(li);
+
     });
 
     if (showAllLink) {
-      const li = document.createElement('li');
+
+      const li = document.createElement("li");
+
       li.innerHTML =
-        '<a href="https://note.com/saitolabo" target="_blank" rel="noopener noreferrer">note一覧を見る</a>';
+        `<a href="https://note.com/${NOTE_USER}"
+            target="_blank"
+            rel="noopener noreferrer">
+            note一覧を見る
+         </a>`;
+
       target.appendChild(li);
+
     }
-  } catch (error) {
-    console.error(error);
+
+  } catch (err) {
+
+    console.error(err);
+
     target.innerHTML =
-      '<li>note記事タイトルの読み込みに失敗しました。</li>';
+      "<li>note記事の読み込みに失敗しました。</li>";
+
   }
+
 }
 
 
-// ===============================
-// Execute
-// ===============================
-loadNoteTitles(5, '#latest-note-titles', true);
-loadNoteTitles(1000, '#all-note-titles', true);
+
+// ======================================================
+// 実行
+// ======================================================
+
+// index.html
+loadNoteTitles(5, "#latest-note-titles", true);
+
+// news.html
+loadNoteTitles(1000, "#all-note-titles", true);
