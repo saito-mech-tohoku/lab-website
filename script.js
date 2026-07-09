@@ -10,7 +10,6 @@ if (videos.length > 0) {
   function showVideo(next) {
     videos.forEach((video, i) => {
       const active = i === next;
-
       video.classList.toggle("is-active", active);
 
       if (active) {
@@ -31,23 +30,36 @@ if (videos.length > 0) {
 }
 
 
-
 // ======================================================
 // note RSS
 // ======================================================
 
-// あなたのnote ID
 const NOTE_USER = "saitolabo";
 
-// RSS→JSON変換API
 const NOTE_API =
   "https://api.rss2json.com/v1/api.json?rss_url=" +
   encodeURIComponent(`https://note.com/${NOTE_USER}/rss`);
 
 
-// note取得
-async function fetchNoteItems() {
+// タイトル中の「2026年7月2日」のような日付を抽出
+function extractDateFromTitle(title) {
+  const text = String(title || "");
 
+  const match = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  return new Date(year, month - 1, day).getTime();
+}
+
+
+async function fetchNoteItems() {
   const response = await fetch(NOTE_API);
 
   if (!response.ok) {
@@ -64,13 +76,11 @@ async function fetchNoteItems() {
 }
 
 
-
 // ======================================================
 // note表示
 // ======================================================
 
 async function loadNoteTitles(limit, selector, showAllLink = false) {
-
   const target = document.querySelector(selector);
 
   if (!target) return;
@@ -78,80 +88,60 @@ async function loadNoteTitles(limit, selector, showAllLink = false) {
   target.innerHTML = "<li>読み込み中...</li>";
 
   try {
-
     const items = await fetchNoteItems();
 
-    // 新しい順
-    items.sort((a, b) => {
+    const list = items
+      .slice()
+      .sort((a, b) => {
+        const dateA = extractDateFromTitle(a.title);
+        const dateB = extractDateFromTitle(b.title);
 
-      return new Date(b.pubDate) - new Date(a.pubDate);
-
-    });
-
-    const list = items.slice(0, limit);
+        return dateB - dateA;
+      })
+      .slice(0, limit);
 
     target.innerHTML = "";
 
     if (list.length === 0) {
-
       target.innerHTML = "<li>記事はありません。</li>";
       return;
-
     }
 
-    list.forEach(item => {
-
+    list.forEach((item) => {
       const li = document.createElement("li");
-
       const a = document.createElement("a");
 
-      a.href = item.link;
+      a.href = item.link || "#";
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-
-      // タイトルだけ表示（タイトル内の日付を利用）
-      a.textContent = item.title;
+      a.textContent = item.title || "タイトル未設定";
 
       li.appendChild(a);
-
       target.appendChild(li);
-
     });
 
     if (showAllLink) {
-
       const li = document.createElement("li");
 
       li.innerHTML =
-        `<a href="https://note.com/${NOTE_USER}"
-            target="_blank"
-            rel="noopener noreferrer">
-            note一覧を見る
-         </a>`;
+        `<a href="https://note.com/${NOTE_USER}" target="_blank" rel="noopener noreferrer">note一覧を見る</a>`;
 
       target.appendChild(li);
-
     }
-
-  } catch (err) {
-
-    console.error(err);
+  } catch (error) {
+    console.error(error);
 
     target.innerHTML =
       "<li>note記事の読み込みに失敗しました。</li>";
-
   }
-
 }
-
 
 
 // ======================================================
 // 実行
 // ======================================================
 
-// index.html
-loadNoteTitles(5, "#latest-note-titles", true);
-
-// news.html
-loadNoteTitles(1000, "#all-note-titles", true);
+document.addEventListener("DOMContentLoaded", () => {
+  loadNoteTitles(5, "#latest-note-titles", true);
+  loadNoteTitles(1000, "#all-note-titles", true);
+});
