@@ -1,38 +1,73 @@
-name: Update note news
+name: Update note feed
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update-news:
+  update-note-feed:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Fetch note RSS and generate JSON
+        run: |
+          mkdir -p data
 
-      - name: Install dependencies
-        run: npm install xml2js
+          python3 << 'PY'
+          import json
+          import urllib.request
+          import xml.etree.ElementTree as ET
+          from email.utils import parsedate_to_datetime
 
-      - name: Generate data/note-feed.json from note RSS
-        run: node scripts/update-note-news.js
+          NOTE_RSS_URL = "https://note.com/saitolabo/rss"
+          OUTPUT_FILE = "data/note-feed.json"
+
+          with urllib.request.urlopen(NOTE_RSS_URL) as response:
+              xml_data = response.read()
+
+          root = ET.fromstring(xml_data)
+
+          items = []
+
+          for item in root.findall("./channel/item"):
+              title = item.findtext("title", default="").strip()
+              link = item.findtext("link", default="").strip()
+              pub_date = item.findtext("pubDate", default="").strip()
+
+              iso_date = ""
+              if pub_date:
+                  try:
+                      iso_date = parsedate_to_datetime(pub_date).isoformat()
+                  except Exception:
+                      iso_date = pub_date
+
+              items.append({
+                  "title": title,
+                  "url": link,
+                  "published_at": iso_date
+              })
+
+          with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+              json.dump(items, f, ensure_ascii=False, indent=2)
+          PY
 
       - name: Commit and push if changed
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
           git add data/note-feed.json
-          git diff --cached --quiet && exit 0
-          git commit -m "Update data/note-feed.json from note RSS"
-          git pull --rebase origin main
-          git push origin main
+
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Update note feed"
+            git push
+          fi
